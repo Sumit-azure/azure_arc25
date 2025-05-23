@@ -1920,150 +1920,150 @@ New-DCVM -LocalBoxConfig $LocalBoxConfig -localCred $localCred -domainCred $doma
 # Write-Host "[Build cluster - Step 9/12] Building Windows Admin Center gateway server VM... (skipping step)" -ForegroundColor Green
 #New-AdminCenterVM -LocalBoxConfig $LocalBoxConfig -localCred $localCred -domainCred $domainCred
 
-Write-Host "[Build cluster - Step 9/11] Preparing Azure local cluster cloud deployment..." -ForegroundColor Green
+# Write-Host "[Build cluster - Step 9/11] Preparing Azure local cluster cloud deployment..." -ForegroundColor Green
 
-$DeploymentProgressString = 'Preparing Azure Local cluster deployment'
+# $DeploymentProgressString = 'Preparing Azure Local cluster deployment'
 
-$tags = Get-AzResourceGroup -Name $env:resourceGroup | Select-Object -ExpandProperty Tags
+# $tags = Get-AzResourceGroup -Name $env:resourceGroup | Select-Object -ExpandProperty Tags
 
-if ($null -ne $tags) {
-    $tags['DeploymentProgress'] = $DeploymentProgressString
-} else {
-    $tags = @{'DeploymentProgress' = $DeploymentProgressString }
-}
+# if ($null -ne $tags) {
+#     $tags['DeploymentProgress'] = $DeploymentProgressString
+# } else {
+#     $tags = @{'DeploymentProgress' = $DeploymentProgressString }
+# }
 
-$null = Set-AzResourceGroup -ResourceGroupName $env:resourceGroup -Tag $tags
-$null = Set-AzResource -ResourceName $env:computername -ResourceGroupName $env:resourceGroup -ResourceType 'microsoft.compute/virtualmachines' -Tag $tags -Force
+# $null = Set-AzResourceGroup -ResourceGroupName $env:resourceGroup -Tag $tags
+# $null = Set-AzResource -ResourceName $env:computername -ResourceGroupName $env:resourceGroup -ResourceType 'microsoft.compute/virtualmachines' -Tag $tags -Force
 
-Invoke-AzureEdgeBootstrap -LocalBoxConfig $LocalBoxConfig -localCred $localCred
+# Invoke-AzureEdgeBootstrap -LocalBoxConfig $LocalBoxConfig -localCred $localCred
 
-Set-AzLocalDeployPrereqs -LocalBoxConfig $LocalBoxConfig -localCred $localCred -domainCred $domainCred
+# Set-AzLocalDeployPrereqs -LocalBoxConfig $LocalBoxConfig -localCred $localCred -domainCred $domainCred
 
-& "$Env:LocalBoxDir\Generate-ARM-Template.ps1"
+# & "$Env:LocalBoxDir\Generate-ARM-Template.ps1"
 
-#######################################################################################
-# Validate and deploy the cluster
-#######################################################################################
+# #######################################################################################
+# # Validate and deploy the cluster
+# #######################################################################################
 
-Write-Host "[Build cluster - Step 10/11] Validate cluster deployment..." -ForegroundColor Green
+# Write-Host "[Build cluster - Step 10/11] Validate cluster deployment..." -ForegroundColor Green
 
-if ("True" -eq $env:autoDeployClusterResource) {
+# if ("True" -eq $env:autoDeployClusterResource) {
 
-    $DeploymentProgressString = 'Validating Azure Local cluster deployment'
+#     $DeploymentProgressString = 'Validating Azure Local cluster deployment'
 
-    $tags = Get-AzResourceGroup -Name $env:resourceGroup | Select-Object -ExpandProperty Tags
+#     $tags = Get-AzResourceGroup -Name $env:resourceGroup | Select-Object -ExpandProperty Tags
 
-    if ($null -ne $tags) {
-        $tags['DeploymentProgress'] = $DeploymentProgressString
-    } else {
-        $tags = @{'DeploymentProgress' = $DeploymentProgressString }
-    }
+#     if ($null -ne $tags) {
+#         $tags['DeploymentProgress'] = $DeploymentProgressString
+#     } else {
+#         $tags = @{'DeploymentProgress' = $DeploymentProgressString }
+#     }
 
-    $null = Set-AzResourceGroup -ResourceGroupName $env:resourceGroup -Tag $tags
-    $null = Set-AzResource -ResourceName $env:computername -ResourceGroupName $env:resourceGroup -ResourceType 'microsoft.compute/virtualmachines' -Tag $tags -Force
+#     $null = Set-AzResourceGroup -ResourceGroupName $env:resourceGroup -Tag $tags
+#     $null = Set-AzResource -ResourceName $env:computername -ResourceGroupName $env:resourceGroup -ResourceType 'microsoft.compute/virtualmachines' -Tag $tags -Force
 
-$TemplateFile = Join-Path -Path $env:LocalBoxDir -ChildPath "azlocal.json"
-$TemplateParameterFile = Join-Path -Path $env:LocalBoxDir -ChildPath "azlocal.parameters.json"
+# $TemplateFile = Join-Path -Path $env:LocalBoxDir -ChildPath "azlocal.json"
+# $TemplateParameterFile = Join-Path -Path $env:LocalBoxDir -ChildPath "azlocal.parameters.json"
 
-try {
-    New-AzResourceGroupDeployment -Name 'localcluster-validate' -ResourceGroupName $env:resourceGroup -TemplateFile $TemplateFile -TemplateParameterFile $TemplateParameterFile -OutVariable ClusterValidationDeployment -ErrorAction Stop
-}
-catch {
-    Write-Output "Validation failed. Re-run New-AzResourceGroupDeployment to retry. Error: $($_.Exception.Message)"
-}
+# try {
+#     New-AzResourceGroupDeployment -Name 'localcluster-validate' -ResourceGroupName $env:resourceGroup -TemplateFile $TemplateFile -TemplateParameterFile $TemplateParameterFile -OutVariable ClusterValidationDeployment -ErrorAction Stop
+# }
+# catch {
+#     Write-Output "Validation failed. Re-run New-AzResourceGroupDeployment to retry. Error: $($_.Exception.Message)"
+# }
 
 
-<#
-  Adding known governance tags for avoiding disruptions to the deployment. These tags are applicable to ONLY Microsoft-internal Azure lab tenants and designed for managing automated governance processes related to cost optimization and security controls.
-  Some resources are not created by the Bicep template for LocalBox, hence the need to add them here as part of the automation.
-#>
+# <#
+#   Adding known governance tags for avoiding disruptions to the deployment. These tags are applicable to ONLY Microsoft-internal Azure lab tenants and designed for managing automated governance processes related to cost optimization and security controls.
+#   Some resources are not created by the Bicep template for LocalBox, hence the need to add them here as part of the automation.
+# #>
 
-$VmResource = Get-AzResource -ResourceName $env:computername -ResourceGroupName $env:resourceGroup -ResourceType 'microsoft.compute/virtualmachines'
+# $VmResource = Get-AzResource -ResourceName $env:computername -ResourceGroupName $env:resourceGroup -ResourceType 'microsoft.compute/virtualmachines'
 
-if ($VmResource.Tags.ContainsKey('CostControl') -and $VmResource.Tags.ContainsKey('SecurityControl')) {
+# if ($VmResource.Tags.ContainsKey('CostControl') -and $VmResource.Tags.ContainsKey('SecurityControl')) {
 
-    if($VmResource.Tags.CostControl -eq 'Ignore' -and $VmResource.Tags.SecurityControl -eq 'Ignore') {
+#     if($VmResource.Tags.CostControl -eq 'Ignore' -and $VmResource.Tags.SecurityControl -eq 'Ignore') {
 
-        Write-Output "CostControl and SecurityControl tags are set to 'Ignore' for the VM resource, adding them to other resources created by the Azure Local deployment"
+#         Write-Output "CostControl and SecurityControl tags are set to 'Ignore' for the VM resource, adding them to other resources created by the Azure Local deployment"
 
-        $tags = @{
-            'CostControl' = 'Ignore'
-            'SecurityControl' = 'Ignore'
-        }
+#         $tags = @{
+#             'CostControl' = 'Ignore'
+#             'SecurityControl' = 'Ignore'
+#         }
 
-        Get-AzResource -ResourceGroupName $env:resourceGroup -ResourceType 'Microsoft.KeyVault/vaults' | Update-AzTag -Tag $tags -Operation Merge
+#         Get-AzResource -ResourceGroupName $env:resourceGroup -ResourceType 'Microsoft.KeyVault/vaults' | Update-AzTag -Tag $tags -Operation Merge
 
-        Get-AzResource -ResourceGroupName $env:resourceGroup -ResourceType 'Microsoft.Storage/storageAccounts' | Update-AzTag -Tag $tags -Operation Merge
+#         Get-AzResource -ResourceGroupName $env:resourceGroup -ResourceType 'Microsoft.Storage/storageAccounts' | Update-AzTag -Tag $tags -Operation Merge
 
-        Get-AzResource -ResourceGroupName $env:resourceGroup -ResourceType 'Microsoft.Compute/disks' | Update-AzTag -Tag $tags -Operation Merge
+#         Get-AzResource -ResourceGroupName $env:resourceGroup -ResourceType 'Microsoft.Compute/disks' | Update-AzTag -Tag $tags -Operation Merge
 
-    }
+#     }
 
-}
+# }
 
-Write-Host "[Build cluster - Step 11/11] Run cluster deployment..." -ForegroundColor Green
+# Write-Host "[Build cluster - Step 11/11] Run cluster deployment..." -ForegroundColor Green
 
-if ($ClusterValidationDeployment.ProvisioningState -eq "Succeeded") {
+# if ($ClusterValidationDeployment.ProvisioningState -eq "Succeeded") {
 
-    $DeploymentProgressString = 'Deploying Azure Local cluster'
+#     $DeploymentProgressString = 'Deploying Azure Local cluster'
 
-    $tags = Get-AzResourceGroup -Name $env:resourceGroup | Select-Object -ExpandProperty Tags
+#     $tags = Get-AzResourceGroup -Name $env:resourceGroup | Select-Object -ExpandProperty Tags
 
-    if ($null -ne $tags) {
-        $tags['DeploymentProgress'] = $DeploymentProgressString
-    } else {
-        $tags = @{'DeploymentProgress' = $DeploymentProgressString }
-    }
+#     if ($null -ne $tags) {
+#         $tags['DeploymentProgress'] = $DeploymentProgressString
+#     } else {
+#         $tags = @{'DeploymentProgress' = $DeploymentProgressString }
+#     }
 
-    $null = Set-AzResourceGroup -ResourceGroupName $env:resourceGroup -Tag $tags
-    $null = Set-AzResource -ResourceName $env:computername -ResourceGroupName $env:resourceGroup -ResourceType 'microsoft.compute/virtualmachines' -Tag $tags -Force
+#     $null = Set-AzResourceGroup -ResourceGroupName $env:resourceGroup -Tag $tags
+#     $null = Set-AzResource -ResourceName $env:computername -ResourceGroupName $env:resourceGroup -ResourceType 'microsoft.compute/virtualmachines' -Tag $tags -Force
 
-    Write-Host "Validation succeeded. Deploying Local cluster..."
+#     Write-Host "Validation succeeded. Deploying Local cluster..."
 
-    try {
-        New-AzResourceGroupDeployment -Name 'localcluster-deploy' -ResourceGroupName $env:resourceGroup -TemplateFile $TemplateFile -deploymentMode "Deploy" -TemplateParameterFile $TemplateParameterFile -OutVariable ClusterDeployment -ErrorAction Stop
-    }
-    catch {
-        Write-Output "Deployment command failed. Re-run New-AzResourceGroupDeployment to retry. Error: $($_.Exception.Message)"
-    }
+#     try {
+#         New-AzResourceGroupDeployment -Name 'localcluster-deploy' -ResourceGroupName $env:resourceGroup -TemplateFile $TemplateFile -deploymentMode "Deploy" -TemplateParameterFile $TemplateParameterFile -OutVariable ClusterDeployment -ErrorAction Stop
+#     }
+#     catch {
+#         Write-Output "Deployment command failed. Re-run New-AzResourceGroupDeployment to retry. Error: $($_.Exception.Message)"
+#     }
 
-    if ("True" -eq $env:autoUpgradeClusterResource -and $ClusterDeployment.ProvisioningState -eq "Succeeded") {
+#     if ("True" -eq $env:autoUpgradeClusterResource -and $ClusterDeployment.ProvisioningState -eq "Succeeded") {
 
-        Write-Host "Deployment succeeded. Upgrading Local cluster..."
+#         Write-Host "Deployment succeeded. Upgrading Local cluster..."
 
-        $DeploymentProgressString = 'Upgrading Azure Local cluster'
+#         $DeploymentProgressString = 'Upgrading Azure Local cluster'
 
-        $tags = Get-AzResourceGroup -Name $env:resourceGroup | Select-Object -ExpandProperty Tags
+#         $tags = Get-AzResourceGroup -Name $env:resourceGroup | Select-Object -ExpandProperty Tags
 
-        if ($null -ne $tags) {
-            $tags['DeploymentProgress'] = $DeploymentProgressString
-        } else {
-            $tags = @{'DeploymentProgress' = $DeploymentProgressString }
-        }
+#         if ($null -ne $tags) {
+#             $tags['DeploymentProgress'] = $DeploymentProgressString
+#         } else {
+#             $tags = @{'DeploymentProgress' = $DeploymentProgressString }
+#         }
 
-        $null = Set-AzResourceGroup -ResourceGroupName $env:resourceGroup -Tag $tags
-        $null = Set-AzResource -ResourceName $env:computername -ResourceGroupName $env:resourceGroup -ResourceType 'microsoft.compute/virtualmachines' -Tag $tags -Force
+#         $null = Set-AzResourceGroup -ResourceGroupName $env:resourceGroup -Tag $tags
+#         $null = Set-AzResource -ResourceName $env:computername -ResourceGroupName $env:resourceGroup -ResourceType 'microsoft.compute/virtualmachines' -Tag $tags -Force
 
-        Update-AzLocalCluster -LocalBoxConfig $LocalBoxConfig -domainCred $domainCred
+#         Update-AzLocalCluster -LocalBoxConfig $LocalBoxConfig -domainCred $domainCred
 
-    }
-    else {
+#     }
+#     else {
 
-        Write-Host '$autoUpgradeClusterResource is false, skipping Local cluster upgrade...follow the documentation to upgrade the cluster manually'
+#         Write-Host '$autoUpgradeClusterResource is false, skipping Local cluster upgrade...follow the documentation to upgrade the cluster manually'
 
-    }
+#     }
 
-}
-else {
+# }
+# else {
 
-    Write-Error "Validation failed. Aborting deployment. Re-run New-AzResourceGroupDeployment to retry."
+#     Write-Error "Validation failed. Aborting deployment. Re-run New-AzResourceGroupDeployment to retry."
 
-}
+# }
 
-}
-else {
-    Write-Host '$autoDeployClusterResource is false, skipping Local cluster deployment. If desired, follow the documentation to deploy the cluster manually'
-}
+# }
+# else {
+#     Write-Host '$autoDeployClusterResource is false, skipping Local cluster deployment. If desired, follow the documentation to deploy the cluster manually'
+# }
 
 
 
